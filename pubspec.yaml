@@ -24,6 +24,8 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_inappwebview: ^5.3.2
+  esc_pos_bluetooth: ^0.2.8
+  flutter_bluetooth_basic: ^0.1.5
 
 
   # The following adds the Cupertino Icons font to your application.

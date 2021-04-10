@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'printer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -8,6 +9,8 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  dynamic jsonData;
+
   InAppWebViewController webViewController;
   InAppWebViewGroupOptions options = InAppWebViewGroupOptions(
   android: AndroidInAppWebViewOptions(
@@ -28,15 +31,10 @@ class _HomeState extends State<Home> {
           webViewController = controller;
         },
         onConsoleMessage: (controller, consoleMessage) async {
-          final errorMessafe = SnackBar(content: Text('Error somethings'));
-
           final androidDefineMessage = 'Uncaught ReferenceError: ok is not defined';
-          final iosDefineMessage = 'Failed to set the "href" property on "Location"';
-
           final isOnAndroidPress = consoleMessage.message.contains(androidDefineMessage);
-          final isOnIosPress = consoleMessage.message.contains(iosDefineMessage);
-          
-          if (isOnAndroidPress || isOnIosPress) {
+
+          if (isOnAndroidPress) {
             final functionName = 'getData';
             final data = await controller.evaluateJavascript(source: '$functionName()');
 
@@ -44,11 +42,29 @@ class _HomeState extends State<Home> {
               context,
               MaterialPageRoute(builder: (context) => Printer(receiptData: data)),
             );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(errorMessafe);
+          }
+        },
+        onLoadStop: (controller, url) async {
+          if (Platform.isIOS) {
+            final functionName = 'getData';
+            final data = await controller.evaluateJavascript(source: '$functionName()');
+
+            setState(() {
+              jsonData = data;
+            });
           }
         },
       ),
+      floatingActionButton: Platform.isIOS && jsonData != null ? FloatingActionButton(
+        child: Icon(Icons.print_rounded),
+        backgroundColor: Color(0xFF008d4c),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => Printer(receiptData: jsonData)),
+          );
+        },
+      ) : null,
     );
   }
 }
