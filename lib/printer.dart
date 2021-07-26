@@ -207,11 +207,11 @@ class _PrinterState extends State<Printer> {
         bluetooth.printCustom("No°     Name                 Price   Qty   Dis   Amount", 0, 0);
         bluetooth.printCustom("----------------------------------------------------", 0, 0);
 
-
         for (var i = 0; i < saleItems.length; i++) {
           final item = saleItems[i];
+          final itemName = item['name'].toString().length <= 15 ? item['name'] : item['name'].toString().substring(0, 15) + "......";
 
-          bluetooth.printCustom("${item['no']}   ${item['name']}\t${item['price']}     ${item['qty']}     ${item['discount']}\%    \$ ${item['total']}", 0, 0);
+          bluetooth.printCustom("${item['no']}   $itemName\t${item['price']}     ${item['qty']}     ${item['discount']}\%    \$ ${item['total']}", 0, 0);
           bluetooth.printCustom("----------------------------------------------------", 0, 0);
         }
 
