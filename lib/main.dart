@@ -1,5 +1,4 @@
-// import 'package:dailypos/home.dart';
-import 'package:dailypos/receipt.dart';
+import 'package:dailypos/home.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -11,8 +10,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      home: Receipt(),
+      home: Home(),
     );
   }
 }

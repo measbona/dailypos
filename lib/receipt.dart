@@ -1,18 +1,16 @@
-import 'dart:typed_data';
+import 'package:intl/intl.dart';
 
-import 'package:dailypos/screenshot.dart';
-import 'package:dailypos/widget/widget_to_image.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:dailypos/printer.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:dailypos/widget/widget_to_image.dart';
 
 import 'components/utils.dart';
 
 class Receipt extends StatefulWidget {
-  final String title;
+  final dynamic receiptData;
 
-  const Receipt({
-    @required this.title,
-  });
+  Receipt({Key key, @required this.receiptData}) : super(key: key);
  
   @override
   _ReceiptState createState() => _ReceiptState();
@@ -20,80 +18,46 @@ class Receipt extends StatefulWidget {
 
 class _ReceiptState extends State<Receipt> {
   GlobalKey captureWidget;
-  dynamic receiptJson = {
-    "shop_type":"02",
-    "printer_type":"80mm",
-    "name":"បូណា",
-    "phone":"+85570333170",
-    "invoice_no":"18_1602",
-    "sale_date":"09/19/2021",
-    "customer_name":"none",
-    "table_name":"none",
-    "address":"none",
-    "sub_total":"13.50",
-    "delivery":"\$ 0",
-    "total":"\$ 13.50",
-    "paid":"Yes",
-    "currency":"USD",
-    "receive":"\$ 15",
-    "exchange":"\$ 1.50",
-    "cur_sign":"\$",
-    "logo":"https://www.168daily.com/public/logo/1610336885.png",
-    "sales":[
-        {
-          "no":"1",
-          "name":"Khmer Food",
-          "price":"15",
-          "qty":"1",
-          "discount":"10",
-          "total":"13.50"
-        },
-        {
-          "no":"2",
-          "name":"ម្ហូបខ្មែរ",
-          "price":"15",
-          "qty":"2",
-          "discount":"0",
-          "total":"16.50"
-        }
-    ]
-  };
 
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
       title: Text('Receipt'),
+      backgroundColor: Color(0xFF008d4c),
       actions: <Widget>[
         IconButton(
-          icon: const Icon(Icons.screen_share_outlined),
+          icon: const Icon(Icons.print),
           tooltip: 'Show Snackbar',
           onPressed: () async {
             final capturedReceipt = await Utils.capture(captureWidget);
 
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => Screenshot(capturedReceipt)),
+              MaterialPageRoute(builder: (context) => Printer(receiptData: widget.receiptData, receiptGenerated: capturedReceipt)),
             );
           },
         ),
       ]
     ),
+    body: SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: Container(
+        padding: EdgeInsets.all(20),
+        child: WidgetToImage(
+          builder: (key) {
+            this.captureWidget = key;
 
-    body: Container(
-      padding: EdgeInsets.all(20),
-      child: WidgetToImage(
-        builder: (key) {
-          this.captureWidget = key;
-
-          return Column(
-            children: <Widget>[
-              _renderReceiptInfo(),
-              _renderTable(),
-            ]
-          );
-        }
-      )
-    ),
+            return Column(
+              children: <Widget>[
+                _renderReceiptInfo(),
+                _renderTable(),
+                _renderBottom(),
+              ]
+            );
+          }
+        )
+      ),
+    )
   );
 
   _renderInfo() {
@@ -107,13 +71,13 @@ class _ReceiptState extends State<Receipt> {
       'Address',
     ];
     final values = [
-      ': ${receiptJson['name']}',
-      ': ${receiptJson['phone']}',
-      ': ${receiptJson['sale_date']}',
-      ': ${receiptJson['invoice_no']}',
-      ': ${receiptJson['customer_name']}',
-      ': ${receiptJson['table_name']}',
-      ': ${receiptJson['address']}'
+      ': ${widget.receiptData['name']}',
+      ': ${widget.receiptData['phone']}',
+      ': ${widget.receiptData['sale_date']}',
+      ': ${widget.receiptData['invoice_no']}',
+      ': ${widget.receiptData['customer_name']}',
+      ': ${widget.receiptData['table_name']}',
+      ': ${widget.receiptData['address']}'
     ];
 
     return Container(
@@ -146,7 +110,7 @@ class _ReceiptState extends State<Receipt> {
 
           Container(
             margin: EdgeInsets.only(right: 30, bottom: 125),
-            child: Image.network(receiptJson['logo'], width: 60, height: 60),
+            child: Image.network(widget.receiptData['logo'], width: 60, height: 60),
           ),
         ],
       ),
@@ -163,10 +127,10 @@ class _ReceiptState extends State<Receipt> {
       'Dis',
       'Amount',
     ];
-    final List<dynamic> saleItems = receiptJson['sales'];
+    final List<dynamic> saleItems = widget.receiptData['sales'];
 
     return Container(
-      margin: EdgeInsets.only(top: 20, bottom: 20),
+      margin: EdgeInsets.only(top: 10, bottom: 20),
       child: Table(
         border: TableBorder(
           top: BorderSide(width: 2, style: BorderStyle.solid),
@@ -187,7 +151,6 @@ class _ReceiptState extends State<Receipt> {
               for (var i = 0; i < headers.length; i++) Utils.tableCell(headers[i])
             ]
           ),
-          // list all item row
           for (var i = 0; i < saleItems.length; i++) _renderItem(saleItems[i])
         ],
       ),
@@ -195,18 +158,88 @@ class _ReceiptState extends State<Receipt> {
   }
 
   _renderItem(dynamic saleItems) {
+    final formatCurrency = new NumberFormat.decimalPattern();
+
     final items = [
       saleItems['no'],
       saleItems['name'],
-      saleItems['price'],
+      formatCurrency.format(double.parse(saleItems['price'])).toString(),
       saleItems['qty'],
-      saleItems['discount'],
-      saleItems['total']
+      '${saleItems['discount']}%',
+      formatCurrency.format(double.parse(saleItems['total'])).toString(),
     ];
 
     return TableRow(
       children: [
         for (var i = 0; i < items.length; i++) Utils.tableCell(items[i])
+      ],
+    );
+  }
+
+  _renderBottom() {
+    final formatCurrency = new NumberFormat.decimalPattern();
+
+    final titles = [
+      'Subtotal',
+      'Delivery',
+      'Total',
+      'Paid',
+      'Currency',
+      'Receive',
+      'Exchange',
+    ];
+    final seperator = [
+      '\$',
+      '\$',
+      '\$',
+      '?',
+      '\$',
+      '\$',
+      '\$',
+    ];
+    final values = [
+      widget.receiptData['sub_total'],
+      widget.receiptData['delivery'],
+      widget.receiptData['total'],
+      widget.receiptData['paid'],
+      widget.receiptData['currency'],
+      widget.receiptData['receive'],
+      widget.receiptData['exchange'],
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: <Widget>[
+        Container(
+          padding: EdgeInsets.only(right: 30),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: <Widget>[
+            Row(
+              children: <Widget>[
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    for (var i = 0 ; i < titles.length; i++) Utils.summaryText(text: titles[i]),
+                  ],
+                ),
+                Column(
+                  children: [
+                    for (var i = 0 ; i < seperator.length; i++) Utils.summaryText(text: seperator[i]),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var i = 0 ; i < values.length; i++) Utils.summaryText(text: values[i], removeDollarSign: true),
+                  ],
+                )
+              ],
+            ),
+           ],
+          ),
+        ),
+        SizedBox(height: 20),
       ],
     );
   }
