@@ -19,13 +19,15 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    var url = Platform.isIOS ? "http://ios.168daily.com/" : "https://www.168daily.com/";
+
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 0,
         backgroundColor: Color(0xFF008d4c),
       ),
       body: InAppWebView(
-        initialUrlRequest: URLRequest(url: Uri.parse("https://www.168daily.com/")),
+        initialUrlRequest: URLRequest(url: Uri.parse(url)),
         initialOptions: options,
         onWebViewCreated: (controller) {
           webViewController = controller;
