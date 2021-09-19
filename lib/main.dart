@@ -1,5 +1,6 @@
+// import 'package:dailypos/home.dart';
+import 'package:dailypos/receipt.dart';
 import 'package:flutter/material.dart';
-import './home.dart';
 
 void main() {
   runApp(MyApp());
@@ -11,7 +12,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      home: Home(),
+      home: Receipt(),
     );
   }
 }
