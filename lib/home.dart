@@ -1,5 +1,6 @@
 import 'dart:io';
-import 'printer.dart';
+
+import 'package:dailypos/receipt.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
@@ -25,7 +26,7 @@ class _HomeState extends State<Home> {
         backgroundColor: Color(0xFF008d4c),
       ),
       body: InAppWebView(
-        initialUrlRequest: URLRequest(url: Uri.parse("https://www.168daily.com/")),
+        initialUrlRequest: URLRequest(url: Uri.parse(Platform.isIOS ? 'http://ios.168daily.com/' : 'https://www.168daily.com/')),
         initialOptions: options,
         onWebViewCreated: (controller) {
           webViewController = controller;
@@ -40,7 +41,7 @@ class _HomeState extends State<Home> {
 
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => Printer(receiptData: data)),
+              MaterialPageRoute(builder: (context) => Receipt(receiptData: data)),
             );
           }
         },
@@ -61,7 +62,7 @@ class _HomeState extends State<Home> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => Printer(receiptData: jsonData)),
+            MaterialPageRoute(builder: (context) => Receipt(receiptData: jsonData)),
           );
         },
       ) : null,
